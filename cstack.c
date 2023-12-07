@@ -51,7 +51,7 @@ hstack_t stack_new(void)
 
     // добавляем указатель на новый стек в массив указателей на стек
 
-    g_table.entries = realloc(g_table.entries, (size_t)(g_table.size + 1));
+    g_table.entries = realloc(g_table.entries, (g_table.size + 1) * sizeof(new_stack));
     if (g_table.entries)
     {
         g_table.size++;
