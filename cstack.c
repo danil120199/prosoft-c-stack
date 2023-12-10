@@ -34,31 +34,27 @@ struct stack_entries_table g_table = {0u, NULL};
 
 hstack_t stack_new(void)
 {
-    // хэндлер нового стека
-    hstack_t new_hstack;
-
     // объявляем указатель на пустой стек
     stack_entry_t *new_stack;
 
     new_stack = malloc(sizeof(stack_entry_t));
     if (new_stack)
     {
-        new_stack->reserved = 0;
-        new_stack->stack = NULL;
+        // добавляем указатель на новый стек в массив указателей на стек
+        g_table.entries = realloc(g_table.entries, (g_table.size + 1) * sizeof(new_stack));
+        if (g_table.entries)
+        {
+            new_stack->reserved = 0;
+            new_stack->stack = NULL;
+            g_table.size++;
+            g_table.entries[g_table.size - 1] = new_stack;
+            
+            return g_table.size - 1;
+        }
+        else 
+            free(new_stack);
     }
-    else
-        return -1;
 
-    // добавляем указатель на новый стек в массив указателей на стек
-
-    g_table.entries = realloc(g_table.entries, (g_table.size + 1) * sizeof(new_stack));
-    if (g_table.entries)
-    {
-        g_table.size++;
-        g_table.entries[g_table.size - 1] = new_stack;
-        new_hstack = g_table.size - 1;
-        return new_hstack;
-    }
     return -1;
 }
 
@@ -122,7 +118,7 @@ void stack_free(const hstack_t hstack)
 
 int stack_valid_handler(const hstack_t hstack)
 {
-    if ((unsigned int)hstack < g_table.size && hstack >= 0)
+    if ((unsigned int)hstack < g_table.size && hstack >= 0 && g_table.entries[hstack])
         return 0;
 
     return 1;
@@ -149,17 +145,21 @@ void stack_push(const hstack_t hstack, const void* data_in, const unsigned int s
             // ptr_new_node ссылается на выделенную область для нового элемента стека
             ptr_new_node = malloc(sizeof(struct node) + (size_t)size);
 
-            // заполняем выделенную область данными
-            memcpy(ptr_new_node->data, data_in, (size_t)size);
+            if (ptr_new_node)
+            {
+                // заполняем выделенную область данными
+                memcpy(ptr_new_node->data, data_in, (size_t)size);
 
-            // сохранение указателя на предыдущий элемент
-            ptr_new_node->prev = g_table.entries[hstack]->stack;
+                // сохранение указателя на предыдущий элемент
+                ptr_new_node->prev = g_table.entries[hstack]->stack;
 
-            // обновление указателя стека
-            g_table.entries[hstack]->stack = ptr_new_node;
+                // обновление указателя стека
+                g_table.entries[hstack]->stack = ptr_new_node;
 
-            // инкрементирование размера стека
-            g_table.entries[hstack]->reserved++;
+                // инкрементирование размера стека
+                g_table.entries[hstack]->reserved++;
+            }
+
         }
     }
     
